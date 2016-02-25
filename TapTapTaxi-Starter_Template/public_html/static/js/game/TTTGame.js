@@ -10,6 +10,7 @@ var TTTGame = (function() {
     this.game = phaserGame;
 
     this.hasStarted = false;
+    this.gameOverGraphic = undefined;
 
     this.mouseTouchDown = false;
     this.isDead = false;
@@ -44,8 +45,33 @@ var TTTGame = (function() {
   };
 
   TTTGame.prototype.gameOver = function() {
-    this.taxi.tint = 0xff0000;
-  }
+    this.isDead = true;
+    this.hasStarted = false;
+    this.arrObstacles = [];
+
+    var dieSpeed = SPEED / 10;
+
+    var tween_1 = this.game.add.tween(this.taxi);
+    tween_1.to({
+      x: this.taxi.x + 20,
+      y: this.taxi.y - 40
+    }, 300 * dieSpeed, Phaser.Easing.Quadratic.Out);
+
+    var tween_2 = this.game.add.tween(this.taxi);
+    tween_2.to({
+      y: GAME_HEIGHT + 40
+    }, 1000, Phaser.Easing.Quadratic.In);
+
+    tween_1.chain(tween_2);
+    tween_1.start();
+
+    var tween_rotate = this.game.add.tween(this.taxi);
+    tween_rotate.to({
+      angle: 200
+    }, 1300 * dieSpeed, Phaser.Easing.Linear.None);
+    tween_rotate.start();
+
+  };
 
   TTTGame.prototype.calculatePositionOnRoadWithXPosition = function(xpos) {
     var adjacent = this.roadStartPosition.x - xpos;
@@ -143,6 +169,7 @@ var TTTGame = (function() {
     this.game.load.image('tile_road_1', 'static/img/assets/tile_road_1.png');
     this.game.load.image('taxi', 'static/img/assets/taxi.png');
     this.game.load.image('obstacle_1', 'static/img/assets/obstacle_1.png');
+    this.game.load.image('gameover', 'static/img/assets/gameover.png');
   };
 
   TTTGame.prototype.create = function() {
@@ -189,17 +216,19 @@ var TTTGame = (function() {
       this.generateRoad();
     }
 
-    if (this.isJumping) {
-      this.taxiJump();
+    if (!this.isDead) {
+      if (this.isJumping) {
+        this.taxiJump();
+      }
+
+      var pointOnRoad =
+      this.calculatePositionOnRoadWithXPosition(this.taxiX);
+
+      this.taxi.x = pointOnRoad.x;
+      this.taxi.y = pointOnRoad.y + this.currentJumpHeight;
+
+      this.checkObstacles();
     }
-
-    var pointOnRoad =
-    this.calculatePositionOnRoadWithXPosition(this.taxiX);
-
-    this.taxi.x = pointOnRoad.x;
-    this.taxi.y = pointOnRoad.y + this.currentJumpHeight;
-
-    this.checkObstacles();
 
     this.moveTilesWithSpeed(SPEED);
   };
