@@ -2,6 +2,15 @@ var playState = {
 
   create: function() {
     this.cursor = game.input.keyboard.createCursorKeys();
+    game.input.keyboard.addKeyCapture([
+      Phaser.Keyboard.UP, Phaser.Keyboard.DOWN,
+      Phaser.Keyboard.LEFT, Phaser.Keyboard.RIGHT
+    ]);
+    this.wasd = {
+      up: game.input.keyboard.addKey(Phaser.Keyboard.W),
+      left: game.input.keyboard.addKey(Phaser.Keyboard.A),
+      right: game.input.keyboard.addKey(Phaser.Keyboard.D)
+    };
 
     this.player = game.add.sprite(game.world.centerX, game.world.centerY, 'player');
     this.player.anchor.setTo(0.5, 0.5);
@@ -79,8 +88,9 @@ var playState = {
       this.nextEnemy = game.time.now + delay;
     }
 
-    // Tell Phaser that the player and the walls should collide
-    game.physics.arcade.collide(this.player, this.walls);
+    // Changed 'this.walls' into 'this.layer'
+    game.physics.arcade.collide(this.player, this.layer);
+    game.physics.arcade.collide(this.enemies, this.layer);
 
     this.movePlayer();
 
@@ -95,6 +105,14 @@ var playState = {
 
     // Call the 'playerDie' function when the play and an enemy colapse
     game.physics.arcade.overlap(this.player, this.enemies, this.playerDie, null, this);
+
+    //this.enemies.forEachAlive(this.checkPosition, this);
+  },
+
+  checkPosition: function(enemy) {
+    if (enemy.y > this.player.y) {
+      enemy.kill();
+    }
   },
 
   takeCoin: function(player, coin) {
@@ -143,12 +161,12 @@ var playState = {
 
   movePlayer: function() {
     // Move the player to the left
-    if (this.cursor.left.isDown) {
+    if (this.cursor.left.isDown || this.wasd.left.isDown) {
       this.player.body.velocity.x = -200;
       this.player.animations.play('left'); // Start the left animation
     }
     // Move the player to the right
-    else if (this.cursor.right.isDown) {
+    else if (this.cursor.right.isDown || this.wasd.right.isDown) {
       this.player.body.velocity.x = 200;
       this.player.animations.play('right'); // Start the left animation
     }
@@ -160,36 +178,52 @@ var playState = {
     }
 
     // Make the player jump
-    if (this.cursor.up.isDown && this.player.body.touching.down) {
-      this.player.body.velocity.y = -320;
+    if ((this.cursor.up.isDown || this.wasd.up.isDown) && this.player.body.onFloor()) {
       this.jumpSound.play();
+      this.player.body.velocity.y = -320;
     }
   },
 
   createWorld: function() {
-    // Create our wall group with Arcade Physics
-    this.walls = game.add.group();
-    this.walls.enableBody = true;
+    // Create the tilemap
+    this.map  = game.add.tilemap('map');
 
-    // Create 10 walls
-    game.add.sprite(0, 0, 'wallV', 0, this.walls); // Left
-    game.add.sprite(480, 0, 'wallV', 0, this.walls); // Right
+    // Add the tileset to the map
+    this.map.addTilesetImage('tileset');
 
-    game.add.sprite(0, 0, 'wallH', 0, this.walls); // Top left
-    game.add.sprite(300, 0, 'wallH', 0, this.walls); // Top right
-    game.add.sprite(0, 320, 'wallH', 0, this.walls); // Bottom left
-    game.add.sprite(300, 320, 'wallH', 0, this.walls); // Bottom right
+    // Create the layer, by specifyng the name of the Tiled layer
+    this.layer = this.map.createLayer('Tile Layer 1');
 
-    game.add.sprite(-100, 160, 'wallH', 0, this.walls); // Middle left
-    game.add.sprite(400, 160, 'wallH', 0, this.walls); // Middle right
+    // Set the world size to match the size of the layer
+    this.layer.resizeWorld();
 
-    var middleTop = game.add.sprite(100, 80, 'wallH', 0, this.walls);
-    middleTop.scale.setTo(1.5, 1);
-    var middleBottom = game.add.sprite(100, 240, 'wallH', 0, this.walls);
-    middleBottom.scale.setTo(1.5, 1);
+    // Enable collisions for the first element of our tileset (the blue wall)
+    this.map.setCollision(1);
 
-    // Set all the wall to be immovable
-    this.walls.setAll('body.immovable', true);
+
+    // // Create our wall group with Arcade Physics
+    // this.walls = game.add.group();
+    // this.walls.enableBody = true;
+    //
+    // // Create 10 walls
+    // game.add.sprite(0, 0, 'wallV', 0, this.walls); // Left
+    // game.add.sprite(480, 0, 'wallV', 0, this.walls); // Right
+    //
+    // game.add.sprite(0, 0, 'wallH', 0, this.walls); // Top left
+    // game.add.sprite(300, 0, 'wallH', 0, this.walls); // Top right
+    // game.add.sprite(0, 320, 'wallH', 0, this.walls); // Bottom left
+    // game.add.sprite(300, 320, 'wallH', 0, this.walls); // Bottom right
+    //
+    // game.add.sprite(-100, 160, 'wallH', 0, this.walls); // Middle left
+    // game.add.sprite(400, 160, 'wallH', 0, this.walls); // Middle right
+    //
+    // var middleTop = game.add.sprite(100, 80, 'wallH', 0, this.walls);
+    // middleTop.scale.setTo(1.5, 1);
+    // var middleBottom = game.add.sprite(100, 240, 'wallH', 0, this.walls);
+    // middleBottom.scale.setTo(1.5, 1);
+    //
+    // // Set all the wall to be immovable
+    // this.walls.setAll('body.immovable', true);
   },
 
   playerDie: function() {

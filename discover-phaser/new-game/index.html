@@ -3,6 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <title>First game</title>
+  <style type="text/css">
+    @import url(http://fonts.googleapis.com/css?family=Geo);
+    .hiddenText {
+      font-family: Geo;
+      visibility: hidden;
+    }
+  </style>
   <script src="phaser.min.js"></script>
   <script src="js/boot.js"></script>
   <script src="js/load.js"></script>
@@ -11,6 +18,7 @@
   <script src="js/game.js"></script>
 </head>
 <body>
+  <p class="hiddenText"> . </p>
   <p> My first Phaser game </p>
   <div id="gameDiv"></div>
 </body>
