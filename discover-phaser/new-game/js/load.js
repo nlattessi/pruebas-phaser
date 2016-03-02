@@ -35,7 +35,11 @@ var loadState = {
     game.load.spritesheet('mute', 'assets/muteButton.png', 28, 22);
 
     game.load.image('tileset', 'assets/tileset.png');
-game.load.tilemap('map', 'assets/map.json', null, Phaser.Tilemap.TILED_JSON);
+    game.load.tilemap('map', 'assets/map.json', null, Phaser.Tilemap.TILED_JSON);
+
+    game.load.image('jumpButton', 'assets/jumpButton.png');
+    game.load.image('rightButton', 'assets/rightButton.png');
+    game.load.image('leftButton', 'assets/leftButton.png');
   },
 
   create: function() {

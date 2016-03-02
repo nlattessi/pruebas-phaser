@@ -44,9 +44,14 @@ var menuState = {
      );
      scoreLabel.anchor.setTo(0.5, 0.5);
 
+     if (game.device.desktop) {
+       var text = 'press the up arrow key to start;'
+     } else {
+       var text = 'touch the screen to start';
+     }
+
      // Explain how to start the game
-     var startLabel = game.add.text(game.world.centerX, game.world.height-80,
-       'press the up arrow key to start',
+     var startLabel = game.add.text(game.world.centerX, game.world.height-80, text,
        { font: '25px Arial', fill: '#ffffff'}
      );
      startLabel.anchor.setTo(0.5, 0.5);
@@ -70,6 +75,8 @@ var menuState = {
 
      // When the 'upKey is pressed, it will call the 'start' function core
      upKey.onDown.addOnce(this.start, this);
+
+     game.input.onDown.addOnce(this.start, this);
 
      // Add the mute button that calls the 'toggleSound' function when pressed
      this.muteButton = game.add.button(20, 20, 'mute', this.toggleSound, this);

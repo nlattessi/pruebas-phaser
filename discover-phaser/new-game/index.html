@@ -5,11 +5,21 @@
   <title>First game</title>
   <style type="text/css">
     @import url(http://fonts.googleapis.com/css?family=Geo);
+    * {
+      margin: 0;
+      padding: 0;
+    }
     .hiddenText {
       font-family: Geo;
       visibility: hidden;
     }
   </style>
+
+  <meta name="viewport" content="initial-scale=1 maximum-scale=1 user-scalable=0 minimal-ui" />
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="HandheldFriendly" content="true" />
+
   <script src="phaser.min.js"></script>
   <script src="js/boot.js"></script>
   <script src="js/load.js"></script>
@@ -18,8 +28,7 @@
   <script src="js/game.js"></script>
 </head>
 <body>
-  <p class="hiddenText"> . </p>
-  <p> My first Phaser game </p>
   <div id="gameDiv"></div>
+  <p class="hiddenText"> . </p>
 </body>
 </html>
