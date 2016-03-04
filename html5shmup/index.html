@@ -4,9 +4,31 @@
   <meta charset="UTF-8" />
   <title>HTML5 Game in an Afternoon</title>
   <style>
-    body {
+    /*body {
       margin: 0 0 0px 0;
       background: #333;
+    };*/
+    * {
+      box-sizing: border-box;
+      margin: 0 0 0px 0;
+      background: #333;
+    }
+    html, body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    /*body {
+      border: 5px solid blue;
+    }*/
+    canvas {
+      position: absolute;
+      width: 50%;
+      height: 50%;
+      top: 25%;
+      left: 25%;
+      background-color: red;
     }
   </style>
   <script src="phaser-arcade-physics.min.js"></script>
