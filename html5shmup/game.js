@@ -1,6 +1,7 @@
 
 BasicGame.Game = function (game) {
-
+  this.debugMode = false;
+  this.noBulletMode = false;
 };
 
 BasicGame.Game.prototype = {
@@ -16,6 +17,12 @@ BasicGame.Game.prototype = {
     this.setupAudio();
 
     this.cursors = this.input.keyboard.createCursorKeys();
+
+    this.debugKey = this.game.input.keyboard.addKey(Phaser.Keyboard.D);
+    this.debugKey.onDown.add(this.toggleDebug, this);
+
+    this.noBulleKey = this.game.input.keyboard.addKey(Phaser.Keyboard.N);
+    this.noBulleKey.onDown.add(this.toggleNoBullet, this);
   },
 
   update: function () {
@@ -26,10 +33,29 @@ BasicGame.Game.prototype = {
     this.processDelayedEffects();
   },
 
-  // render: function () {
-  //   this.game.debug.body(this.player);
-  //   this.enemyPool.forEachAlive(this.renderGroup, this);
-  // },
+  toggleDebug: function() {
+    this.debugMode = !this.debugMode;
+    if (!this.debugMode) {
+      this.game.debug.reset();
+    }
+  },
+
+  toggleNoBullet: function() {
+    this.noBulletMode = !this.noBulletMode;
+  },
+
+  render: function () {
+    if (this.debugMode) {
+      this.game.debug.body(this.player);
+      this.bulletPool.forEachAlive(this.renderGroupGreen, this);
+      this.powerUpPool.forEachAlive(this.renderGroupGreen, this);
+
+      this.enemyPool.forEachAlive(this.renderGroupRed, this);
+      this.shooterPool.forEachAlive(this.renderGroupRed, this);
+      this.bossPool.forEachAlive(this.renderGroupRed, this);
+      this.enemyBulletPool.forEachAlive(this.renderGroupRed, this);
+    }
+  },
 
   //
   // create() - related functions
@@ -269,49 +295,52 @@ BasicGame.Game.prototype = {
   },
 
   enemyFire: function () {
-    this.shooterPool.forEachAlive(function (enemy) {
-      if (this.time.now > enemy.nextShotAt && this.enemyBulletPool.countDead() > 0) {
-        var bullet = this.enemyBulletPool.getFirstExists(false);
-        bullet.reset(enemy.x, enemy.y);
-        this.physics.arcade.moveToObject(
-          bullet, this.player, BasicGame.ENEMY_BULLET_VELOCITY
-        );
-        enemy.nextShotAt = this.time.now + BasicGame.SHOOTER_SHOT_DELAY;
+
+    if (!this.noBulletMode) {
+      this.shooterPool.forEachAlive(function (enemy) {
+        if (this.time.now > enemy.nextShotAt && this.enemyBulletPool.countDead() > 0) {
+          var bullet = this.enemyBulletPool.getFirstExists(false);
+          bullet.reset(enemy.x, enemy.y);
+          this.physics.arcade.moveToObject(
+            bullet, this.player, BasicGame.ENEMY_BULLET_VELOCITY
+          );
+          enemy.nextShotAt = this.time.now + BasicGame.SHOOTER_SHOT_DELAY;
+          this.enemyFireSFX.play();
+        }
+      }, this);
+
+      if (this.bossAproaching === false && this.boss.alive &&
+          this.boss.nextShotAt < this.time.now &&
+          this.enemyBulletPool.countDead() >= 10) {
+
+        this.boss.nextShotAt = this.time.now + BasicGame.BOSS_SHOT_DELAY;
         this.enemyFireSFX.play();
-      }
-    }, this);
 
-    if (this.bossAproaching === false && this.boss.alive &&
-        this.boss.nextShotAt < this.time.now &&
-        this.enemyBulletPool.countDead() >= 10) {
-
-      this.boss.nextShotAt = this.time.now + BasicGame.BOSS_SHOT_DELAY;
-      this.enemyFireSFX.play();
-
-      for (var i = 0; i < 5; i++) {
-        // process 2 bullets at a time
-        var leftBullet = this.enemyBulletPool.getFirstExists(false);
-        leftBullet.reset(this.boss.x - 10 - i * 10, this.boss.y + 20);
-        var rightBullet = this.enemyBulletPool.getFirstExists(false);
-        rightBullet.reset(this.boss.x + 10 + i * 10, this.boss.y + 20);
-        if (this.boss.health > BasicGame.BOSS_HEALTH / 2) {
-          // aim directly at the player
-          this.physics.arcade.moveToObject(
-            leftBullet, this.player, BasicGame.ENEMY_BULLET_VELOCITY
-          );
-          this.physics.arcade.moveToObject(
-            rightBullet, this.player, BasicGame.ENEMY_BULLET_VELOCITY
-          );
-        } else {
-          // aim slightly off center of the player
-          this.physics.arcade.moveToXY(
-            leftBullet, this.player.x - i * 100, this.player.y,
-            BasicGame.ENEMY_BULLET_VELOCITY
-          );
-          this.physics.arcade.moveToXY(
-            rightBullet, this.player.x + i * 100, this.player.y,
-            BasicGame.ENEMY_BULLET_VELOCITY
-          );
+        for (var i = 0; i < 5; i++) {
+          // process 2 bullets at a time
+          var leftBullet = this.enemyBulletPool.getFirstExists(false);
+          leftBullet.reset(this.boss.x - 10 - i * 10, this.boss.y + 20);
+          var rightBullet = this.enemyBulletPool.getFirstExists(false);
+          rightBullet.reset(this.boss.x + 10 + i * 10, this.boss.y + 20);
+          if (this.boss.health > BasicGame.BOSS_HEALTH / 2) {
+            // aim directly at the player
+            this.physics.arcade.moveToObject(
+              leftBullet, this.player, BasicGame.ENEMY_BULLET_VELOCITY
+            );
+            this.physics.arcade.moveToObject(
+              rightBullet, this.player, BasicGame.ENEMY_BULLET_VELOCITY
+            );
+          } else {
+            // aim slightly off center of the player
+            this.physics.arcade.moveToXY(
+              leftBullet, this.player.x - i * 100, this.player.y,
+              BasicGame.ENEMY_BULLET_VELOCITY
+            );
+            this.physics.arcade.moveToXY(
+              rightBullet, this.player.x + i * 100, this.player.y,
+              BasicGame.ENEMY_BULLET_VELOCITY
+            );
+          }
         }
       }
     }
@@ -425,8 +454,12 @@ BasicGame.Game.prototype = {
     }
   },
 
-  renderGroup: function(member) {
+  renderGroupGreen: function(member, color) {
     this.game.debug.body(member);
+  },
+
+  renderGroupRed: function(member, color) {
+    this.game.debug.body(member, 'rgba(255,0,0,0.5)');
   },
 
   quitGame: function (pointer) {
